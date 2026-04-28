@@ -1,0 +1,216 @@
+{
+  "name": "Near Duplicate Noise",
+  "version": "0.1.0",
+  "description": "Scoring red-team. Many events share keywords with the correct answer but only one matches the actual entity, key, or context. Designed to expose adapters that win on lexical overlap or typed-metadata token-matching alone.",
+  "gates": {
+    "adapters": {
+      "typed-semantic": {
+        "minScore": 0.45,
+        "minHitRate": 0.5
+      },
+      "hybrid": {
+        "minScore": 0.5,
+        "minHitRate": 0.5
+      }
+    },
+    "maxP95RecallLatencyMs": 300
+  },
+  "scenarios": [
+    {
+      "id": "deploy-window-noise",
+      "title": "Multiple production deploy windows for unrelated services should not steal the answer",
+      "dimensions": ["interference", "precision", "lexical-noise"],
+      "tags": ["noise", "deploy"],
+      "events": [
+        {
+          "id": "deploy-window-checkout",
+          "day": 5,
+          "type": "procedural",
+          "entity": "Checkout",
+          "key": "deploy_window",
+          "value": "Tuesday 14:00-16:00 UTC",
+          "content": "The Checkout service production deploy window is Tuesday 14:00 to 16:00 UTC behind the standard payments freeze process.",
+          "context": {
+            "service": "checkout"
+          },
+          "tags": ["deploy", "checkout"],
+          "salience": 0.85
+        },
+        {
+          "id": "deploy-window-search",
+          "day": 5,
+          "type": "procedural",
+          "entity": "Search",
+          "key": "deploy_window",
+          "value": "Wednesday 09:00-11:00 UTC",
+          "content": "The Search service production deploy window is Wednesday 09:00 to 11:00 UTC behind the standard search freeze process.",
+          "context": {
+            "service": "search"
+          },
+          "tags": ["deploy", "search"],
+          "salience": 0.85
+        },
+        {
+          "id": "deploy-window-notifications",
+          "day": 5,
+          "type": "procedural",
+          "entity": "Notifications",
+          "key": "deploy_window",
+          "value": "Thursday 18:00-20:00 UTC",
+          "content": "The Notifications service production deploy window is Thursday 18:00 to 20:00 UTC behind the standard notifications freeze process.",
+          "context": {
+            "service": "notifications"
+          },
+          "tags": ["deploy", "notifications"],
+          "salience": 0.85
+        },
+        {
+          "id": "deploy-window-ledger",
+          "day": 5,
+          "type": "procedural",
+          "entity": "Ledger",
+          "key": "deploy_window",
+          "value": "Friday 11:00-13:00 UTC",
+          "content": "The Ledger service production deploy window is Friday 11:00 to 13:00 UTC behind the standard ledger freeze process.",
+          "context": {
+            "service": "ledger"
+          },
+          "tags": ["deploy", "ledger"],
+          "salience": 0.85
+        },
+        {
+          "id": "deploy-window-onboarding",
+          "day": 5,
+          "type": "procedural",
+          "entity": "Onboarding",
+          "key": "deploy_window",
+          "value": "Monday 16:00-18:00 UTC",
+          "content": "The Onboarding service production deploy window is Monday 16:00 to 18:00 UTC behind the standard onboarding freeze process.",
+          "context": {
+            "service": "onboarding"
+          },
+          "tags": ["deploy", "onboarding"],
+          "salience": 0.85
+        }
+      ],
+      "probes": [
+        {
+          "id": "ledger-window",
+          "query": "When can the Ledger service safely ship a production change this week?",
+          "type": "procedural",
+          "context": {
+            "service": "ledger"
+          },
+          "expected": ["deploy-window-ledger"],
+          "forbidden": [
+            "deploy-window-checkout",
+            "deploy-window-search",
+            "deploy-window-notifications",
+            "deploy-window-onboarding"
+          ],
+          "answerKeywords": ["Friday", "11:00", "13:00", "Ledger"],
+          "topK": 3
+        },
+        {
+          "id": "notifications-window",
+          "query": "What is the safe production deploy time for the Notifications service?",
+          "type": "procedural",
+          "context": {
+            "service": "notifications"
+          },
+          "expected": ["deploy-window-notifications"],
+          "forbidden": [
+            "deploy-window-checkout",
+            "deploy-window-search",
+            "deploy-window-ledger",
+            "deploy-window-onboarding"
+          ],
+          "answerKeywords": ["Thursday", "18:00", "20:00", "Notifications"],
+          "topK": 3
+        }
+      ]
+    },
+    {
+      "id": "incident-postmortem-noise",
+      "title": "Five plausible post-mortems share keywords; only one actually applies",
+      "dimensions": ["lexical-noise", "precision", "episodic"],
+      "tags": ["noise", "postmortem"],
+      "events": [
+        {
+          "id": "postmortem-checkout-rate-limit",
+          "day": 1,
+          "type": "episodic",
+          "content": "Checkout incident post-mortem 0142 attributed elevated 5xx rates to an aggressive vendor rate limit on the Stripe webhook fan-out path.",
+          "context": {
+            "incident": "0142"
+          },
+          "tags": ["postmortem", "checkout"],
+          "salience": 0.7
+        },
+        {
+          "id": "postmortem-search-rate-limit",
+          "day": 8,
+          "type": "episodic",
+          "content": "Search incident post-mortem 0151 attributed elevated 5xx rates to an aggressive vendor rate limit on the typeahead embedding service.",
+          "context": {
+            "incident": "0151"
+          },
+          "tags": ["postmortem", "search"],
+          "salience": 0.7
+        },
+        {
+          "id": "postmortem-notifications-rate-limit",
+          "day": 12,
+          "type": "episodic",
+          "content": "Notifications incident post-mortem 0163 attributed elevated 5xx rates to an aggressive vendor rate limit on the SMS provider failover queue.",
+          "context": {
+            "incident": "0163"
+          },
+          "tags": ["postmortem", "notifications"],
+          "salience": 0.7
+        },
+        {
+          "id": "postmortem-ledger-rate-limit-target",
+          "day": 17,
+          "type": "episodic",
+          "content": "Ledger incident post-mortem 0177 attributed elevated 5xx rates to an aggressive vendor rate limit on the bank reconciliation export job.",
+          "context": {
+            "incident": "0177"
+          },
+          "tags": ["postmortem", "ledger"],
+          "salience": 0.7
+        },
+        {
+          "id": "postmortem-onboarding-rate-limit",
+          "day": 24,
+          "type": "episodic",
+          "content": "Onboarding incident post-mortem 0188 attributed elevated 5xx rates to an aggressive vendor rate limit on the email verification provider.",
+          "context": {
+            "incident": "0188"
+          },
+          "tags": ["postmortem", "onboarding"],
+          "salience": 0.7
+        }
+      ],
+      "probes": [
+        {
+          "id": "ledger-postmortem",
+          "query": "Which post-mortem connects an aggressive vendor rate limit to the bank reconciliation export job?",
+          "type": "episodic",
+          "context": {
+            "incident": "0177"
+          },
+          "expected": ["postmortem-ledger-rate-limit-target"],
+          "forbidden": [
+            "postmortem-checkout-rate-limit",
+            "postmortem-search-rate-limit",
+            "postmortem-notifications-rate-limit",
+            "postmortem-onboarding-rate-limit"
+          ],
+          "answerKeywords": ["bank", "reconciliation", "export"],
+          "topK": 3
+        }
+      ]
+    }
+  ]
+}

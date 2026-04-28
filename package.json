@@ -1,0 +1,58 @@
+{
+  "name": "memorygym",
+  "version": "0.1.0",
+  "description": "Benchmarking harness for agent memory adapters with replayable scenario packs, locked baselines, and a release gate.",
+  "type": "module",
+  "bin": {
+    "memorygym": "./src/cli.js"
+  },
+  "files": [
+    "src/",
+    "benchmarks/",
+    "reports/baselines/",
+    "docs/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "bench": "node src/cli.js run --suite benchmarks/core.scenarios.json",
+    "bench:check": "node src/cli.js run --suite benchmarks/core.scenarios.json --check",
+    "bench:regression": "node src/cli.js run --suite benchmarks/audrey-regression.scenarios.json --adapters typed-semantic,hybrid --check",
+    "bench:extended": "node src/cli.js matrix --suites benchmarks/interference-stacked.scenarios.json,benchmarks/contradiction-resolution.scenarios.json,benchmarks/noise-near-duplicates.scenarios.json,benchmarks/abstention.scenarios.json --adapters typed-semantic,hybrid --check",
+    "bench:all": "node src/cli.js matrix --suites benchmarks/core.scenarios.json,benchmarks/audrey-regression.scenarios.json,benchmarks/interference-stacked.scenarios.json,benchmarks/contradiction-resolution.scenarios.json,benchmarks/noise-near-duplicates.scenarios.json,benchmarks/abstention.scenarios.json --adapters typed-semantic,hybrid --check",
+    "bench:audrey": "node src/cli.js run --suite benchmarks/core.scenarios.json --audrey",
+    "doctor": "node src/cli.js doctor",
+    "lint:suites": "node src/cli.js lint --suites benchmarks/core.scenarios.json,benchmarks/audrey-regression.scenarios.json,benchmarks/interference-stacked.scenarios.json,benchmarks/contradiction-resolution.scenarios.json,benchmarks/noise-near-duplicates.scenarios.json,benchmarks/abstention.scenarios.json,benchmarks/audrey-capabilities.scenarios.json --strict",
+    "matrix": "node src/cli.js matrix --suites benchmarks/core.scenarios.json,benchmarks/audrey-regression.scenarios.json --adapters typed-semantic,hybrid --check",
+    "calibrate": "node src/cli.js calibrate --suites benchmarks/core.scenarios.json,benchmarks/audrey-regression.scenarios.json --adapters typed-semantic,hybrid --runs 3",
+    "release:gate": "node src/cli.js release --suites benchmarks/core.scenarios.json,benchmarks/audrey-regression.scenarios.json --adapters typed-semantic,hybrid",
+    "list": "node src/cli.js list",
+    "test": "node tests/run.js",
+    "check": "node --check src/cli.js && node --check src/index.js && node --check src/runner.js && node --check src/text.js && node --check src/env.js && node --check src/score.js && node --check src/report.js && node --check src/adapters/baselines.js && node --check src/adapters/audrey-mcp.js && node --check src/adapters/audrey-http.js && node --check src/mcp/stdio-client.js && node --check src/baseline.js && node --check src/compare.js && node --check src/doctor.js && node --check src/manifest.js && node --check src/lint.js && node --check src/matrix.js && node --check src/calibrate.js && node --check src/release.js && node --check src/release-notes.js"
+  },
+  "keywords": [
+    "agent-memory",
+    "benchmark",
+    "memory",
+    "mcp",
+    "audrey",
+    "episodic-memory",
+    "semantic-memory",
+    "evaluation",
+    "regression-gate"
+  ],
+  "author": "Tyler Eveland",
+  "license": "MIT",
+  "homepage": "https://github.com/evilander/memorygym#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evilander/memorygym.git"
+  },
+  "bugs": {
+    "url": "https://github.com/evilander/memorygym/issues"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

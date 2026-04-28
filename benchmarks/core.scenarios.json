@@ -1,0 +1,256 @@
+{
+  "name": "MemoryGym Core",
+  "version": "0.1.0",
+  "description": "Replayable scenarios for typed beliefs, episodic recall, decay, interference, and retrieval diagnostics.",
+  "gates": {
+    "adapters": {
+      "typed-semantic": {
+        "minScore": 0.52,
+        "minHitRate": 0.6
+      },
+      "hybrid": {
+        "minScore": 0.58,
+        "minHitRate": 0.7
+      }
+    },
+    "maxP95RecallLatencyMs": 250
+  },
+  "scenarios": [
+    {
+      "id": "typed-profile-updates",
+      "title": "Typed profile updates should prefer current beliefs",
+      "dimensions": ["typed", "semantic", "interference"],
+      "tags": ["profile", "typed"],
+      "events": [
+        {
+          "id": "maya-pref-morning",
+          "day": 1,
+          "type": "semantic",
+          "entity": "Maya",
+          "key": "meeting_preference",
+          "value": "morning async notes",
+          "content": "Maya prefers morning async notes before any meeting-heavy work.",
+          "salience": 0.72
+        },
+        {
+          "id": "maya-workspace-old",
+          "day": 2,
+          "type": "semantic",
+          "entity": "Maya",
+          "key": "workspace",
+          "value": "Atlas",
+          "content": "Maya's active workspace used to be Atlas for the onboarding sprint.",
+          "salience": 0.5
+        },
+        {
+          "id": "jonas-distractor-workspace",
+          "day": 3,
+          "type": "semantic",
+          "entity": "Jonas",
+          "key": "workspace",
+          "value": "Atlas",
+          "content": "Jonas owns the Atlas workspace and handles its migration checklist.",
+          "salience": 0.48
+        },
+        {
+          "id": "maya-workspace-current",
+          "day": 9,
+          "type": "semantic",
+          "entity": "Maya",
+          "key": "workspace",
+          "value": "Aurora",
+          "content": "Maya changed her active workspace from Atlas to Aurora after the onboarding sprint ended.",
+          "salience": 0.84
+        }
+      ],
+      "probes": [
+        {
+          "id": "current-workspace",
+          "query": "Which collaboration environment should Maya use right now?",
+          "type": "semantic",
+          "expected": ["maya-workspace-current"],
+          "forbidden": ["maya-workspace-old", "jonas-distractor-workspace"],
+          "answerKeywords": ["Maya", "Aurora"],
+          "topK": 3
+        },
+        {
+          "id": "meeting-preference",
+          "query": "How should Maya receive meeting preparation?",
+          "type": "semantic",
+          "expected": ["maya-pref-morning"],
+          "forbidden": ["maya-workspace-old", "maya-workspace-current"],
+          "answerKeywords": ["morning", "async", "notes"],
+          "topK": 3
+        }
+      ]
+    },
+    {
+      "id": "episodic-incident-thread",
+      "title": "Episodic incident threads should recall the decisive fix",
+      "dimensions": ["episodic", "retrieval-aware", "interference"],
+      "tags": ["incident", "payments"],
+      "context": {
+        "domain": "payments"
+      },
+      "events": [
+        {
+          "id": "stripe-alert",
+          "day": 4,
+          "type": "episodic",
+          "content": "The checkout incident began with Stripe webhook retries after deploy 842.",
+          "tags": ["stripe", "webhook"],
+          "salience": 0.68
+        },
+        {
+          "id": "webhook-root-cause",
+          "day": 5,
+          "type": "episodic",
+          "content": "Root cause for the checkout incident was a rotated webhook secret missing from production environment variables.",
+          "tags": ["stripe", "webhook", "root-cause"],
+          "salience": 0.95
+        },
+        {
+          "id": "email-distractor",
+          "day": 6,
+          "type": "episodic",
+          "content": "Email delivery retries also increased that week because the sandbox SMTP account throttled newsletter tests.",
+          "tags": ["email"],
+          "salience": 0.42
+        },
+        {
+          "id": "webhook-fix",
+          "day": 7,
+          "type": "procedural",
+          "content": "The durable checkout fix is to rotate the Stripe webhook secret, update production env, redeploy, and replay failed events.",
+          "tags": ["stripe", "webhook", "fix"],
+          "salience": 0.97
+        }
+      ],
+      "probes": [
+        {
+          "id": "incident-root-cause",
+          "query": "What caused the checkout webhook incident?",
+          "expected": ["webhook-root-cause"],
+          "forbidden": ["email-distractor"],
+          "answerKeywords": ["rotated", "webhook", "secret", "production"],
+          "topK": 4
+        },
+        {
+          "id": "incident-durable-fix",
+          "query": "What should we do to stop Stripe checkout retries after webhook failures?",
+          "expected": ["webhook-fix", "webhook-root-cause"],
+          "forbidden": ["email-distractor"],
+          "answerKeywords": ["rotate", "webhook", "secret", "replay"],
+          "topK": 4
+        }
+      ]
+    },
+    {
+      "id": "decay-vs-salience",
+      "title": "Decay should not erase old high-salience constraints",
+      "dimensions": ["decay", "salience", "semantic"],
+      "tags": ["security", "launch"],
+      "events": [
+        {
+          "id": "auth-fail-closed",
+          "day": 1,
+          "type": "procedural",
+          "content": "Launch invariant: admin authentication must fail closed when session verification, token parsing, or role lookup fails.",
+          "tags": ["auth", "invariant"],
+          "salience": 1
+        },
+        {
+          "id": "auth-css-polish",
+          "day": 25,
+          "type": "episodic",
+          "content": "The admin login button received a small visual polish pass with tighter spacing and calmer border colors.",
+          "tags": ["auth", "ui"],
+          "salience": 0.25
+        },
+        {
+          "id": "calendar-note",
+          "day": 26,
+          "type": "semantic",
+          "content": "The booking calendar embed should remain the public availability source of truth.",
+          "tags": ["booking"],
+          "salience": 0.78
+        }
+      ],
+      "probes": [
+        {
+          "id": "auth-invariant",
+          "query": "What launch rule matters most for admin authentication failures?",
+          "expected": ["auth-fail-closed"],
+          "forbidden": ["auth-css-polish"],
+          "answerKeywords": ["fail", "closed", "session", "role"],
+          "topK": 3
+        }
+      ]
+    },
+    {
+      "id": "retrieval-context-routing",
+      "title": "Retrieval context should separate similar facts across projects",
+      "dimensions": ["context", "retrieval-aware", "semantic"],
+      "tags": ["projects", "routing"],
+      "events": [
+        {
+          "id": "audrey-benchmark-gate",
+          "day": 3,
+          "type": "procedural",
+          "content": "Audrey release validation includes build, typecheck, benchmark gate, doctor, demo, pack dry-run, and host smoke coverage.",
+          "context": {
+            "project": "audrey"
+          },
+          "tags": ["audrey", "release"],
+          "salience": 0.86
+        },
+        {
+          "id": "repopulse-trace-contract",
+          "day": 3,
+          "type": "semantic",
+          "content": "RepoPulse retrieval traces record pipeline_version, stage records, candidate chunk ids, and dense rerank boundaries.",
+          "context": {
+            "project": "repopulse"
+          },
+          "tags": ["repopulse", "trace"],
+          "salience": 0.82
+        },
+        {
+          "id": "termivibe-first-contact",
+          "day": 3,
+          "type": "procedural",
+          "content": "TermiVibe first contact validation should cover config precedence, typed mode, no wake word mode, and telemetry persistence.",
+          "context": {
+            "project": "termivibe"
+          },
+          "tags": ["termivibe", "cli"],
+          "salience": 0.8
+        }
+      ],
+      "probes": [
+        {
+          "id": "audrey-release-gate",
+          "query": "Which project requires a benchmark gate and doctor check for release validation?",
+          "context": {
+            "project": "audrey"
+          },
+          "expected": ["audrey-benchmark-gate"],
+          "forbidden": ["repopulse-trace-contract", "termivibe-first-contact"],
+          "answerKeywords": ["Audrey", "benchmark", "doctor"],
+          "topK": 3
+        },
+        {
+          "id": "repopulse-trace",
+          "query": "Which memory mentions pipeline version and dense rerank trace boundaries?",
+          "context": {
+            "project": "repopulse"
+          },
+          "expected": ["repopulse-trace-contract"],
+          "forbidden": ["audrey-benchmark-gate", "termivibe-first-contact"],
+          "answerKeywords": ["RepoPulse", "pipeline", "dense", "rerank"],
+          "topK": 3
+        }
+      ]
+    }
+  ]
+}

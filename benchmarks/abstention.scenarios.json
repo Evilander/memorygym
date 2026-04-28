@@ -1,0 +1,139 @@
+{
+  "name": "Abstention",
+  "version": "0.1.0",
+  "description": "Refusal probes inspired by LongMemEval. The adapter is asked about facts that were never observed but share lexical territory with stored memories. A correct adapter should return nothing high-confidence rather than fabricate via lexical overlap.",
+  "gates": {
+    "adapters": {
+      "typed-semantic": {
+        "minScore": 0.5,
+        "minHitRate": 0.66
+      },
+      "hybrid": {
+        "minScore": 0.5,
+        "minHitRate": 0.66
+      }
+    },
+    "maxP95RecallLatencyMs": 300
+  },
+  "scenarios": [
+    {
+      "id": "unobserved-team-membership",
+      "title": "Asking about an unobserved team should not synthesize a member from neighboring facts",
+      "dimensions": ["abstention", "precision", "lexical-noise"],
+      "tags": ["abstention", "team"],
+      "events": [
+        {
+          "id": "team-platform-lead",
+          "day": 2,
+          "type": "semantic",
+          "entity": "Platform",
+          "key": "team_lead",
+          "value": "Adira",
+          "content": "Adira leads the Platform infrastructure team this quarter.",
+          "salience": 0.7
+        },
+        {
+          "id": "team-payments-lead",
+          "day": 2,
+          "type": "semantic",
+          "entity": "Payments",
+          "key": "team_lead",
+          "value": "Beto",
+          "content": "Beto leads the Payments squad this quarter.",
+          "salience": 0.7
+        },
+        {
+          "id": "team-search-lead",
+          "day": 2,
+          "type": "semantic",
+          "entity": "Search",
+          "key": "team_lead",
+          "value": "Cyra",
+          "content": "Cyra leads the Search relevance team this quarter.",
+          "salience": 0.7
+        }
+      ],
+      "probes": [
+        {
+          "id": "growth-team-lead-unobserved",
+          "kind": "abstention",
+          "query": "Who leads the Growth Marketing team this quarter?",
+          "expected": [],
+          "forbidden": ["team-platform-lead", "team-payments-lead", "team-search-lead"],
+          "abstainThreshold": 0.4,
+          "topK": 3
+        }
+      ]
+    },
+    {
+      "id": "unobserved-incident",
+      "title": "Asking about an unobserved incident should not adopt a similar one",
+      "dimensions": ["abstention", "precision", "episodic"],
+      "tags": ["abstention", "incident"],
+      "events": [
+        {
+          "id": "incident-stripe-webhook-2026-04-12",
+          "day": 1,
+          "type": "episodic",
+          "content": "Incident on 2026-04-12 traced Checkout 5xx errors to a Stripe webhook secret rotation that did not propagate to production env vars.",
+          "tags": ["incident", "stripe", "checkout"],
+          "salience": 0.9
+        },
+        {
+          "id": "incident-sendgrid-2026-04-15",
+          "day": 4,
+          "type": "episodic",
+          "content": "Incident on 2026-04-15 traced Notifications email delays to a SendGrid IP warm-up policy change.",
+          "tags": ["incident", "sendgrid", "notifications"],
+          "salience": 0.85
+        }
+      ],
+      "probes": [
+        {
+          "id": "twilio-incident-unobserved",
+          "kind": "abstention",
+          "query": "What caused the Twilio outage on 2026-04-20 that affected SMS delivery for the Onboarding flow?",
+          "expected": [],
+          "forbidden": ["incident-stripe-webhook-2026-04-12", "incident-sendgrid-2026-04-15"],
+          "abstainThreshold": 0.35,
+          "topK": 3
+        }
+      ]
+    },
+    {
+      "id": "unobserved-policy",
+      "title": "Asking about an unobserved policy should not graft a similar one",
+      "dimensions": ["abstention", "precision", "procedural"],
+      "tags": ["abstention", "policy"],
+      "events": [
+        {
+          "id": "policy-pii-retention",
+          "day": 5,
+          "type": "procedural",
+          "content": "PII retention policy: customer email addresses are purged 30 days after account closure under the data minimization mandate.",
+          "tags": ["policy", "pii"],
+          "salience": 0.8
+        },
+        {
+          "id": "policy-log-retention",
+          "day": 5,
+          "type": "procedural",
+          "content": "Log retention policy: application logs older than 14 days are archived to cold storage and removed from live indexes after 90 days.",
+          "tags": ["policy", "logs"],
+          "salience": 0.7
+        }
+      ],
+      "probes": [
+        {
+          "id": "kyc-document-retention-unobserved",
+          "kind": "abstention",
+          "query": "What is our KYC document retention policy for verified business customers in the EU?",
+          "expected": [],
+          "forbidden": ["policy-pii-retention", "policy-log-retention"],
+          "abstainThreshold": 0.35,
+          "topK": 3
+        }
+      ]
+    }
+  ]
+}

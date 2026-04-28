@@ -1,0 +1,159 @@
+{
+  "name": "Contradiction Resolution",
+  "version": "0.1.0",
+  "description": "Belief revision under contradiction. Inspired by BeliefShift (arXiv 2603.23848). Adapters must converge on the corrected belief once a contradicting observation arrives, even after the prior belief was reinforced multiple times.",
+  "gates": {
+    "adapters": {
+      "typed-semantic": {
+        "minScore": 0.5,
+        "minHitRate": 0.66
+      },
+      "hybrid": {
+        "minScore": 0.55,
+        "minHitRate": 0.66
+      }
+    },
+    "maxP95RecallLatencyMs": 300
+  },
+  "scenarios": [
+    {
+      "id": "vendor-flip",
+      "title": "A reinforced vendor selection is overturned by a board decision",
+      "dimensions": ["contradiction", "temporal", "authority"],
+      "tags": ["contradiction", "vendor"],
+      "events": [
+        {
+          "id": "vendor-initial-northwind",
+          "day": 1,
+          "type": "semantic",
+          "entity": "DataPipeline",
+          "key": "vendor",
+          "value": "Northwind",
+          "content": "The DataPipeline team initially selected Northwind as the analytics vendor based on the original RFP scoring.",
+          "salience": 0.6
+        },
+        {
+          "id": "vendor-reinforce-architecture",
+          "day": 6,
+          "type": "semantic",
+          "content": "Architecture review confirmed Northwind for the DataPipeline analytics layer because of its existing connector for the staging warehouse.",
+          "tags": ["vendor", "architecture"],
+          "salience": 0.6
+        },
+        {
+          "id": "vendor-reinforce-procurement",
+          "day": 9,
+          "type": "semantic",
+          "content": "Procurement attached Northwind's preferred-vendor agreement to the DataPipeline analytics scope of work.",
+          "tags": ["vendor", "procurement"],
+          "salience": 0.55
+        },
+        {
+          "id": "vendor-board-flip-southspar",
+          "day": 18,
+          "type": "semantic",
+          "entity": "DataPipeline",
+          "key": "vendor",
+          "value": "Southspar",
+          "content": "The board overturned the analytics vendor decision and switched the DataPipeline vendor to Southspar, citing data residency and the new compliance program.",
+          "tags": ["vendor", "board", "authority", "current"],
+          "salience": 0.97
+        },
+        {
+          "id": "vendor-followup-southspar-runbook",
+          "day": 21,
+          "type": "procedural",
+          "content": "Engineering published a Southspar onboarding runbook for the DataPipeline analytics migration after the board's vendor switch.",
+          "tags": ["vendor", "runbook"],
+          "salience": 0.78
+        }
+      ],
+      "probes": [
+        {
+          "id": "vendor-after-flip",
+          "query": "Which analytics vendor should the DataPipeline team be onboarding now?",
+          "type": "semantic",
+          "expected": ["vendor-board-flip-southspar"],
+          "forbidden": [
+            "vendor-initial-northwind",
+            "vendor-reinforce-architecture",
+            "vendor-reinforce-procurement"
+          ],
+          "answerKeywords": ["Southspar", "DataPipeline"],
+          "topK": 4
+        },
+        {
+          "id": "vendor-after-flip-runbook",
+          "query": "What runbook should new engineers follow for the DataPipeline analytics integration this month?",
+          "expected": ["vendor-followup-southspar-runbook", "vendor-board-flip-southspar"],
+          "forbidden": [
+            "vendor-initial-northwind",
+            "vendor-reinforce-architecture"
+          ],
+          "answerKeywords": ["Southspar", "runbook"],
+          "topK": 4
+        }
+      ]
+    },
+    {
+      "id": "policy-revert",
+      "title": "A reinforced security policy is reverted by an incident review",
+      "dimensions": ["contradiction", "authority", "security"],
+      "tags": ["contradiction", "policy"],
+      "events": [
+        {
+          "id": "policy-30-day-rotation",
+          "day": 2,
+          "type": "procedural",
+          "entity": "AdminAuth",
+          "key": "key_rotation",
+          "value": "30 days",
+          "content": "AdminAuth keys were originally rotated every 30 days under the launch hardening policy.",
+          "salience": 0.7
+        },
+        {
+          "id": "policy-30-day-reinforce-doc",
+          "day": 8,
+          "type": "semantic",
+          "content": "The internal security wiki cited the 30-day AdminAuth rotation cadence as the canonical setting.",
+          "tags": ["policy", "docs"],
+          "salience": 0.55
+        },
+        {
+          "id": "policy-30-day-reinforce-runbook",
+          "day": 14,
+          "type": "procedural",
+          "content": "The on-call runbook listed 30-day AdminAuth key rotation as a routine operation step.",
+          "tags": ["policy", "runbook"],
+          "salience": 0.5
+        },
+        {
+          "id": "policy-7-day-incident-flip",
+          "day": 24,
+          "type": "procedural",
+          "entity": "AdminAuth",
+          "key": "key_rotation",
+          "value": "7 days",
+          "content": "After the AdminAuth credential leak post-mortem, the security incident review tightened AdminAuth key rotation to every 7 days and made the prior 30-day cadence non-compliant.",
+          "tags": ["policy", "incident", "current"],
+          "salience": 0.98
+        }
+      ],
+      "probes": [
+        {
+          "id": "policy-current-cadence",
+          "query": "How often should AdminAuth keys be rotated under the current security policy?",
+          "type": "procedural",
+          "expected": ["policy-7-day-incident-flip"],
+          "forbidden": [
+            "policy-30-day-rotation",
+            "policy-30-day-reinforce-doc",
+            "policy-30-day-reinforce-runbook"
+          ],
+          "answerKeywords": ["7", "days", "AdminAuth", "rotation"],
+          "topK": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,296 @@
+{
+  "$schema": "../src/schema/pack.schema.json",
+  "name": "Audrey Capabilities",
+  "version": "0.1.0",
+  "description": "Audrey-only probes for MCP capabilities that go beyond plain memory_encode and memory_recall.",
+  "gates": {
+    "adapters": {
+      "audrey-mcp": {
+        "minScore": 0.72,
+        "minHitRate": 0.72,
+        "maxP95RecallLatencyMs": 5000
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "id": "resolve-truth-native",
+      "title": "Resolve truth should handle a prepared contradiction",
+      "dimensions": ["audrey-native", "contradiction", "truth-resolution"],
+      "tags": ["audrey", "truth", "contradiction"],
+      "events": [
+        {
+          "id": "truth-import-contradiction",
+          "day": 1,
+          "type": "semantic",
+          "content": "Benchmark setup imports two contradicting Audrey semantic claims about the Kairos launch owner.",
+          "source": "model-generated",
+          "tags": ["setup", "contradiction"],
+          "salience": 0.8,
+          "audreyToolCall": {
+            "name": "memory_import",
+            "arguments": {
+              "snapshot": {
+                "version": "0.21.0",
+                "episodes": [],
+                "semantics": [
+                  {
+                    "id": "mg-kairos-owner-old",
+                    "content": "Kairos launch ownership belongs to the Atlas team.",
+                    "state": "active",
+                    "evidence_episode_ids": [],
+                    "evidence_count": 1,
+                    "supporting_count": 1,
+                    "source_type_diversity": 1,
+                    "created_at": "2026-04-01T12:00:00.000Z",
+                    "salience": 0.65
+                  },
+                  {
+                    "id": "mg-kairos-owner-current",
+                    "content": "Kairos launch ownership belongs to the Aurora team after the board decision.",
+                    "state": "active",
+                    "evidence_episode_ids": [],
+                    "evidence_count": 1,
+                    "supporting_count": 1,
+                    "source_type_diversity": 1,
+                    "created_at": "2026-04-20T12:00:00.000Z",
+                    "salience": 0.9
+                  }
+                ],
+                "procedures": [],
+                "causalLinks": [],
+                "contradictions": [
+                  {
+                    "id": "mg-kairos-owner-contradiction",
+                    "claim_a_id": "mg-kairos-owner-old",
+                    "claim_a_type": "semantic",
+                    "claim_b_id": "mg-kairos-owner-current",
+                    "claim_b_type": "semantic",
+                    "state": "open",
+                    "created_at": "2026-04-20T12:05:00.000Z"
+                  }
+                ],
+                "consolidationRuns": [],
+                "consolidationMetrics": [],
+                "config": {}
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "id": "resolve-owner-truth",
+          "kind": "capability",
+          "query": "Resolve which team owns the Kairos launch after the board decision.",
+          "expected": [],
+          "requires": ["memory_resolve_truth"],
+          "capabilityArgs": {
+            "memory_resolve_truth": {
+              "contradiction_id": "mg-kairos-owner-contradiction"
+            }
+          },
+          "topK": 1
+        }
+      ]
+    },
+    {
+      "id": "observe-tool-native",
+      "title": "Tool observation should capture reusable failure traces",
+      "dimensions": ["audrey-native", "tool-trace", "failure-learning"],
+      "tags": ["audrey", "tools", "failure"],
+      "events": [
+        {
+          "id": "tool-trace-spawn-eperm",
+          "day": 1,
+          "type": "episodic",
+          "content": "Audrey observed a Bash tool failure where npm test could not spawn workers because the Windows host returned EPERM.",
+          "source": "tool-result",
+          "tags": ["spawn", "eperm", "tool-trace"],
+          "salience": 0.94,
+          "audreyToolCall": {
+            "name": "memory_observe_tool",
+            "mapIdFrom": "id",
+            "memorygymEventId": "tool-trace-spawn-eperm",
+            "arguments": {
+              "event": "PostToolUseFailure",
+              "tool": "Bash",
+              "session_id": "memorygym-tool-trace",
+              "input": {
+                "command": "npm test"
+              },
+              "output": {
+                "stderr": "spawn EPERM before test files executed"
+              },
+              "outcome": "failed",
+              "error_summary": "spawn EPERM before test files executed",
+              "cwd": "B:/Projects/Claude/github-ideas/ideas/2026-04-27/memorygym",
+              "metadata": {
+                "classification": "host worker startup restriction"
+              },
+              "retain_details": true
+            }
+          }
+        },
+        {
+          "id": "tool-trace-classification",
+          "day": 2,
+          "type": "procedural",
+          "content": "When npm test fails with spawn EPERM before test files execute, classify it as a host worker startup restriction and use an in-process validation harness.",
+          "source": "direct-observation",
+          "tags": ["spawn", "eperm", "test"],
+          "salience": 0.93
+        }
+      ],
+      "probes": [
+        {
+          "id": "tool-failure-recall",
+          "query": "What should Audrey remember about npm test spawn EPERM failures?",
+          "expected": ["tool-trace-classification"],
+          "forbidden": ["tool-trace-spawn-eperm"],
+          "answerKeywords": ["host", "worker", "startup", "restriction"],
+          "requires": ["memory_observe_tool"],
+          "topK": 4
+        }
+      ]
+    },
+    {
+      "id": "dream-native",
+      "title": "Dream should consolidate repeated episodic launch lessons",
+      "dimensions": ["audrey-native", "dream", "consolidation"],
+      "tags": ["audrey", "dream", "consolidation"],
+      "events": [
+        {
+          "id": "dream-episode-release-readme",
+          "day": 1,
+          "type": "episodic",
+          "content": "During release prep, the README needed a real quickstart before packaging claims were credible.",
+          "source": "direct-observation",
+          "tags": ["release", "docs"],
+          "salience": 0.82
+        },
+        {
+          "id": "dream-episode-release-pack",
+          "day": 2,
+          "type": "episodic",
+          "content": "During release prep, npm pack dry-run exposed whether private handoff files were accidentally shipping.",
+          "source": "direct-observation",
+          "tags": ["release", "packaging"],
+          "salience": 0.86
+        },
+        {
+          "id": "dream-episode-release-gate",
+          "day": 3,
+          "type": "episodic",
+          "content": "During release prep, the release gate needed tests, lint, baselines, and generated evidence before launch.",
+          "source": "direct-observation",
+          "tags": ["release", "gate"],
+          "salience": 0.88
+        }
+      ],
+      "probes": [
+        {
+          "id": "run-dream-cycle",
+          "kind": "capability",
+          "query": "Run Audrey dream to consolidate repeated release-prep lessons.",
+          "expected": [],
+          "requires": ["memory_dream"],
+          "capabilityArgs": {
+            "memory_dream": {
+              "min_cluster_size": 2,
+              "similarity_threshold": 0.4,
+              "dormant_threshold": 0.05
+            }
+          },
+          "topK": 1
+        },
+        {
+          "id": "dream-release-lesson",
+          "query": "What release-prep lesson was repeated across the Audrey dream cycle?",
+          "expected": ["dream-episode-release-gate", "dream-episode-release-pack"],
+          "forbidden": ["dream-episode-release-readme"],
+          "answerKeywords": ["release", "gate", "pack"],
+          "requires": ["memory_dream"],
+          "topK": 5
+        }
+      ]
+    },
+    {
+      "id": "preflight-native",
+      "title": "Preflight should check memory before risky actions",
+      "dimensions": ["audrey-native", "preflight", "risk"],
+      "tags": ["audrey", "preflight", "risk"],
+      "events": [
+        {
+          "id": "preflight-risk-release",
+          "day": 1,
+          "type": "procedural",
+          "content": "Before publishing MemoryGym, run release gate, inspect npm pack dry-run contents, and keep live Audrey data isolated unless explicitly allowed.",
+          "source": "direct-observation",
+          "tags": ["release", "safety", "preflight"],
+          "salience": 0.96
+        }
+      ],
+      "probes": [
+        {
+          "id": "release-preflight-health",
+          "kind": "capability",
+          "query": "Is the system healthy enough to publish MemoryGym after release checks?",
+          "expected": [],
+          "requires": ["memory_preflight"],
+          "capabilityArgs": {
+            "memory_preflight": {
+              "action": "publish MemoryGym to npm",
+              "tool": "npm publish",
+              "strict": true,
+              "limit": 10,
+              "include_status": true,
+              "include_capsule": false,
+              "record_event": false
+            }
+          },
+          "topK": 1
+        }
+      ]
+    },
+    {
+      "id": "reflexes-native",
+      "title": "Reflexes should convert remembered evidence into trigger guidance",
+      "dimensions": ["audrey-native", "reflexes", "procedural"],
+      "tags": ["audrey", "reflexes", "guidance"],
+      "events": [
+        {
+          "id": "reflex-spawn-eperm",
+          "day": 1,
+          "type": "procedural",
+          "content": "Reflex: when a worker-based Node test runner fails with spawn EPERM before tests execute, switch to an in-process harness and classify the failure as host policy.",
+          "source": "direct-observation",
+          "tags": ["reflex", "spawn", "eperm"],
+          "salience": 0.95
+        }
+      ],
+      "probes": [
+        {
+          "id": "spawn-eperm-reflex",
+          "kind": "capability",
+          "query": "When npm test hits spawn EPERM before files execute, what reflex should Audrey surface?",
+          "expected": [],
+          "requires": ["memory_reflexes"],
+          "capabilityArgs": {
+            "memory_reflexes": {
+              "action": "rerun npm test after spawn EPERM",
+              "tool": "npm test",
+              "strict": true,
+              "limit": 10,
+              "include_status": true,
+              "include_capsule": false,
+              "include_preflight": true,
+              "record_event": false
+            }
+          },
+          "topK": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "adapter": "hybrid",
+  "version": "0.1.0",
+  "suite_fingerprint": "6c9d9c7733cb27b9c336213c09dcc4569689d04e5fbd3a7cb203b93046ec0b63",
+  "suites": [
+    {
+      "name": "MemoryGym Core",
+      "version": "0.1.0",
+      "fingerprint": "d6406336594001d068323bf424ee006a4d810339d62bfe7636b6dff42b7a8213"
+    }
+  ],
+  "score": 0.7269410738845022,
+  "hitRate": 1,
+  "p95RecallLatencyMs": 0.24350000000004002,
+  "capturedAt": "2026-04-28T15:42:13.979Z",
+  "runs": 5,
+  "scoreStdDev": 0
+}
