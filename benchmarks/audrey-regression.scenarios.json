@@ -1,0 +1,291 @@
+{
+  "name": "Audrey Regression",
+  "version": "0.1.0",
+  "description": "Harder release-gate scenarios based on real agent-memory failure modes: stale docs, host/runtime blockers, project routing, tool traces, and live-source authority.",
+  "gates": {
+    "adapters": {
+      "typed-semantic": {
+        "minScore": 0.56,
+        "minHitRate": 0.75
+      },
+      "hybrid": {
+        "minScore": 0.6,
+        "minHitRate": 0.8
+      }
+    },
+    "maxP95RecallLatencyMs": 300
+  },
+  "scenarios": [
+    {
+      "id": "live-symptom-over-docs",
+      "title": "Live symptoms should outrank stale handoff notes",
+      "dimensions": ["temporal", "authority", "debugging"],
+      "tags": ["runtime", "debugging"],
+      "events": [
+        {
+          "id": "old-doc-npm-cache",
+          "day": 1,
+          "type": "semantic",
+          "entity": "WindowsShell",
+          "key": "primary_failure",
+          "value": "npm cache",
+          "content": "An old handoff says Windows shell failures were usually npm cache permission problems.",
+          "tags": ["docs", "stale"],
+          "salience": 0.34
+        },
+        {
+          "id": "live-crypto-provider",
+          "day": 12,
+          "type": "episodic",
+          "entity": "WindowsShell",
+          "key": "primary_failure",
+          "value": "crypto provider env",
+          "content": "Live reproduction showed PowerShell and Node startup failing with 0x8009001D and ncrypto CSPRNG when SystemRoot and windir were missing.",
+          "tags": ["live", "runtime", "root-cause"],
+          "salience": 0.96
+        },
+        {
+          "id": "durable-env-fix",
+          "day": 13,
+          "type": "procedural",
+          "entity": "WindowsShell",
+          "key": "repair",
+          "value": "restore system env",
+          "content": "Durable repair is to restore SystemRoot, WINDIR, windir, and SystemDrive in the shell environment policy, then prove recovery with a crypto-backed Node smoke test.",
+          "tags": ["runtime", "fix"],
+          "salience": 0.98
+        }
+      ],
+      "probes": [
+        {
+          "id": "runtime-root-cause",
+          "query": "What was the current root cause of Windows shell startup failures?",
+          "expected": ["live-crypto-provider", "durable-env-fix"],
+          "forbidden": ["old-doc-npm-cache"],
+          "answerKeywords": ["0x8009001D", "SystemRoot", "windir"],
+          "topK": 4
+        }
+      ]
+    },
+    {
+      "id": "project-memory-routing",
+      "title": "Similar release guidance should route by project context",
+      "dimensions": ["context", "project-routing", "semantic"],
+      "tags": ["projects", "release"],
+      "events": [
+        {
+          "id": "audrey-release-validation",
+          "day": 4,
+          "type": "procedural",
+          "content": "Audrey release validation should include build, typecheck, benchmark gate, doctor, demo, pack dry-run, and host smoke coverage.",
+          "context": {
+            "project": "audrey"
+          },
+          "tags": ["audrey", "release"],
+          "salience": 0.9
+        },
+        {
+          "id": "crm-booking-launch",
+          "day": 4,
+          "type": "procedural",
+          "content": "3D Exterior launch validation should keep booking as a request unless server-side calendar availability is truly validated.",
+          "context": {
+            "project": "3d-exterior-solutions"
+          },
+          "tags": ["crm", "booking", "release"],
+          "salience": 0.88
+        },
+        {
+          "id": "termivibe-first-contact",
+          "day": 4,
+          "type": "procedural",
+          "content": "TermiVibe release validation should cover config precedence, typed mode, no wake word mode, adapter compatibility, and telemetry persistence.",
+          "context": {
+            "project": "termivibe"
+          },
+          "tags": ["termivibe", "release"],
+          "salience": 0.84
+        }
+      ],
+      "probes": [
+        {
+          "id": "audrey-gate-context",
+          "query": "Which release checklist mentions a benchmark gate and host smoke coverage?",
+          "context": {
+            "project": "audrey"
+          },
+          "expected": ["audrey-release-validation"],
+          "forbidden": ["crm-booking-launch", "termivibe-first-contact"],
+          "answerKeywords": ["Audrey", "benchmark", "host", "smoke"],
+          "topK": 3
+        },
+        {
+          "id": "booking-context",
+          "query": "Which release rule says booking stays a request without validated availability?",
+          "context": {
+            "project": "3d-exterior-solutions"
+          },
+          "expected": ["crm-booking-launch"],
+          "forbidden": ["audrey-release-validation", "termivibe-first-contact"],
+          "answerKeywords": ["booking", "request", "availability"],
+          "topK": 3
+        }
+      ]
+    },
+    {
+      "id": "tool-trace-learning",
+      "title": "Tool failures should become reusable operational memory",
+      "dimensions": ["tool-trace", "procedural", "failure-learning"],
+      "tags": ["tools", "host"],
+      "events": [
+        {
+          "id": "vitest-eperm-symptom",
+          "day": 8,
+          "type": "episodic",
+          "content": "Vitest and Node test workers failed before executing test files with spawn EPERM on this Windows host.",
+          "tags": ["vitest", "spawn", "eperm"],
+          "salience": 0.79
+        },
+        {
+          "id": "worker-spawn-classification",
+          "day": 9,
+          "type": "semantic",
+          "entity": "spawn EPERM",
+          "key": "classification",
+          "value": "host worker startup restriction",
+          "content": "When Node worker-based test runners fail with spawn EPERM before test code runs, classify it as a host worker startup restriction, not an app regression.",
+          "tags": ["spawn", "classification"],
+          "salience": 0.93
+        },
+        {
+          "id": "in-process-test-fallback",
+          "day": 10,
+          "type": "procedural",
+          "content": "Use an in-process Node validation harness when worker-based test runners are blocked by spawn EPERM.",
+          "tags": ["test", "fallback"],
+          "salience": 0.91
+        }
+      ],
+      "probes": [
+        {
+          "id": "spawn-eperm-classification",
+          "query": "How should we classify test runner spawn EPERM before test files execute?",
+          "expected": ["worker-spawn-classification", "in-process-test-fallback"],
+          "forbidden": ["vitest-eperm-symptom"],
+          "answerKeywords": ["host", "worker", "startup", "restriction"],
+          "topK": 4
+        }
+      ]
+    },
+    {
+      "id": "source-authority-calendar",
+      "title": "Live source authority should beat convenient stale memory",
+      "dimensions": ["authority", "temporal", "semantic"],
+      "tags": ["calendar", "crm"],
+      "events": [
+        {
+          "id": "old-booking-direct",
+          "day": 2,
+          "type": "semantic",
+          "entity": "Booking",
+          "key": "flow",
+          "value": "direct schedule",
+          "content": "Old notes said site visitors could directly schedule appointments from the website form.",
+          "tags": ["stale", "booking"],
+          "salience": 0.4
+        },
+        {
+          "id": "calendar-source-of-truth",
+          "day": 11,
+          "type": "semantic",
+          "entity": "Booking",
+          "key": "availability_source",
+          "value": "official calendar embed",
+          "content": "Mindy's official calendar is the availability source of truth, and unavailable times should be greyed out there.",
+          "tags": ["calendar", "official"],
+          "salience": 0.92
+        },
+        {
+          "id": "crm-capture-companion",
+          "day": 11,
+          "type": "procedural",
+          "entity": "Booking",
+          "key": "crm_capture",
+          "value": "companion lead intake",
+          "content": "Even when the live calendar is embedded, preserve a CRM companion capture path so booking does not bypass lead intake.",
+          "tags": ["crm", "booking"],
+          "salience": 0.87
+        }
+      ],
+      "probes": [
+        {
+          "id": "calendar-authority",
+          "query": "What should define unavailable appointment times?",
+          "expected": ["calendar-source-of-truth"],
+          "forbidden": ["old-booking-direct"],
+          "answerKeywords": ["official", "calendar", "greyed"],
+          "topK": 3
+        },
+        {
+          "id": "crm-companion",
+          "query": "What must remain when a live booking calendar is embedded?",
+          "expected": ["crm-capture-companion"],
+          "forbidden": ["old-booking-direct"],
+          "answerKeywords": ["CRM", "capture", "lead"],
+          "topK": 3
+        }
+      ]
+    },
+    {
+      "id": "negative-space-forgotten",
+      "title": "Irrelevant high-overlap memories should not win",
+      "dimensions": ["interference", "retrieval-aware", "precision"],
+      "tags": ["interference", "precision"],
+      "events": [
+        {
+          "id": "audrey-live-data-guard",
+          "day": 20,
+          "type": "procedural",
+          "entity": "MemoryGym",
+          "key": "audrey_data_policy",
+          "value": "isolated benchmark data",
+          "content": "MemoryGym Audrey benchmarks must default to isolated data directories and refuse the live Audrey data store unless explicitly allowed.",
+          "tags": ["audrey", "safety", "data"],
+          "salience": 0.96
+        },
+        {
+          "id": "audrey-live-store-health",
+          "day": 20,
+          "type": "semantic",
+          "entity": "Audrey",
+          "key": "live_store_health",
+          "value": "healthy",
+          "content": "The live Audrey data store is healthy with episodic memories, vector episodes, local embeddings, and no reembed recommendation.",
+          "tags": ["audrey", "health", "data"],
+          "salience": 0.65
+        },
+        {
+          "id": "audrey-release-doc-assets",
+          "day": 20,
+          "type": "semantic",
+          "entity": "Audrey",
+          "key": "docs_assets",
+          "value": "benchmark charts",
+          "content": "Audrey release docs can include generated benchmark chart assets for README proof points.",
+          "tags": ["audrey", "docs", "benchmark"],
+          "salience": 0.42
+        }
+      ],
+      "probes": [
+        {
+          "id": "isolated-data-policy",
+          "query": "What data store should MemoryGym use when benchmarking Audrey?",
+          "expected": ["audrey-live-data-guard"],
+          "forbidden": ["audrey-live-store-health", "audrey-release-doc-assets"],
+          "answerKeywords": ["isolated", "refuse", "live", "allowed"],
+          "topK": 3
+        }
+      ]
+    }
+  ]
+}

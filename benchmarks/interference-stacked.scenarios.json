@@ -1,0 +1,261 @@
+{
+  "name": "Interference Stacked",
+  "version": "0.1.0",
+  "description": "Proactive-interference stress: many sequential updates to the same entity:key. Inspired by PI-LLM (arXiv 2506.08184). The adapter must surface only the most recent value and avoid the long tail of stale variants.",
+  "gates": {
+    "adapters": {
+      "typed-semantic": {
+        "minScore": 0.5,
+        "minHitRate": 0.66
+      },
+      "hybrid": {
+        "minScore": 0.55,
+        "minHitRate": 0.66
+      }
+    },
+    "maxP95RecallLatencyMs": 300
+  },
+  "scenarios": [
+    {
+      "id": "workspace-12-flips",
+      "title": "Twelve sequential workspace flips should resolve to the most recent",
+      "dimensions": ["interference", "typed", "temporal"],
+      "tags": ["interference-stacked", "profile"],
+      "events": [
+        {
+          "id": "ws-flip-01",
+          "day": 1,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Atlas",
+          "content": "Priya started the onboarding sprint inside the Atlas workspace.",
+          "salience": 0.5
+        },
+        {
+          "id": "ws-flip-02",
+          "day": 3,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Borealis",
+          "content": "Priya migrated her active work into the Borealis workspace after the Atlas board archived old tickets.",
+          "salience": 0.5
+        },
+        {
+          "id": "ws-flip-03",
+          "day": 5,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Cinder",
+          "content": "Priya re-pinned her active workspace to Cinder while Borealis settled some permission bugs.",
+          "salience": 0.5
+        },
+        {
+          "id": "ws-flip-04",
+          "day": 7,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Drift",
+          "content": "Priya cut over to the Drift workspace once Cinder's retention rules expired.",
+          "salience": 0.5
+        },
+        {
+          "id": "ws-flip-05",
+          "day": 9,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Ember",
+          "content": "Priya took her current threads into the Ember workspace after the Drift sandbox capped seats.",
+          "salience": 0.5
+        },
+        {
+          "id": "ws-flip-06",
+          "day": 11,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Fjord",
+          "content": "Priya reassigned her active workspace to Fjord during the Ember storage migration.",
+          "salience": 0.5
+        },
+        {
+          "id": "ws-flip-07",
+          "day": 13,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Glacier",
+          "content": "Priya hopped into the Glacier workspace once Fjord locked invites for compliance review.",
+          "salience": 0.5
+        },
+        {
+          "id": "ws-flip-08",
+          "day": 15,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Halo",
+          "content": "Priya started spending her primary day in the Halo workspace because Glacier slowed under reindex load.",
+          "salience": 0.55
+        },
+        {
+          "id": "ws-flip-09",
+          "day": 18,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Iris",
+          "content": "Priya transitioned her active workspace into Iris after the Halo team merged into a parent org.",
+          "salience": 0.6
+        },
+        {
+          "id": "ws-flip-10",
+          "day": 22,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Juno",
+          "content": "Priya migrated everything to the Juno workspace once Iris paused new write integrations.",
+          "salience": 0.65
+        },
+        {
+          "id": "ws-flip-11",
+          "day": 26,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Kestrel",
+          "content": "Priya temporarily routed work through the Kestrel workspace while Juno rolled out a breaking schema update.",
+          "salience": 0.7
+        },
+        {
+          "id": "ws-flip-12",
+          "day": 30,
+          "type": "semantic",
+          "entity": "Priya",
+          "key": "active_workspace",
+          "value": "Lumen",
+          "content": "Priya finalized her active workspace in Lumen after the Kestrel pilot wrapped and Lumen absorbed the Juno migration.",
+          "salience": 0.92
+        }
+      ],
+      "probes": [
+        {
+          "id": "current-after-flips",
+          "query": "Where should new collaboration threads with Priya land right now?",
+          "type": "semantic",
+          "expected": ["ws-flip-12"],
+          "forbidden": [
+            "ws-flip-01",
+            "ws-flip-02",
+            "ws-flip-03",
+            "ws-flip-04",
+            "ws-flip-05",
+            "ws-flip-06",
+            "ws-flip-07",
+            "ws-flip-08",
+            "ws-flip-09",
+            "ws-flip-10",
+            "ws-flip-11"
+          ],
+          "answerKeywords": ["Priya", "Lumen"],
+          "topK": 3
+        },
+        {
+          "id": "current-after-flips-followup",
+          "query": "Which workspace is Priya's primary one this week?",
+          "type": "semantic",
+          "expected": ["ws-flip-12"],
+          "forbidden": [
+            "ws-flip-01",
+            "ws-flip-02",
+            "ws-flip-03",
+            "ws-flip-04",
+            "ws-flip-05",
+            "ws-flip-06",
+            "ws-flip-07",
+            "ws-flip-08",
+            "ws-flip-09",
+            "ws-flip-10",
+            "ws-flip-11"
+          ],
+          "answerKeywords": ["Lumen", "Priya"],
+          "topK": 3
+        }
+      ]
+    },
+    {
+      "id": "oncall-rotation-stack",
+      "title": "Stacked on-call rotations resolve to the active rotation",
+      "dimensions": ["interference", "typed", "operations"],
+      "tags": ["interference-stacked", "oncall"],
+      "events": [
+        {
+          "id": "oncall-jan",
+          "day": 1,
+          "type": "semantic",
+          "entity": "Payments",
+          "key": "primary_oncall",
+          "value": "Renu",
+          "content": "Renu carried the Payments primary on-call rotation through January.",
+          "salience": 0.55
+        },
+        {
+          "id": "oncall-feb",
+          "day": 32,
+          "type": "semantic",
+          "entity": "Payments",
+          "key": "primary_oncall",
+          "value": "Marko",
+          "content": "Marko picked up the Payments primary on-call rotation for February while Renu took post-holiday recovery.",
+          "salience": 0.55
+        },
+        {
+          "id": "oncall-mar",
+          "day": 60,
+          "type": "semantic",
+          "entity": "Payments",
+          "key": "primary_oncall",
+          "value": "Sienna",
+          "content": "Sienna ran the Payments primary on-call rotation across March, including the gateway upgrade weekend.",
+          "salience": 0.6
+        },
+        {
+          "id": "oncall-apr-current",
+          "day": 92,
+          "type": "semantic",
+          "entity": "Payments",
+          "key": "primary_oncall",
+          "value": "Tariq",
+          "content": "Tariq is the active Payments primary on-call this April rotation and owns the new SRE pager schedule.",
+          "salience": 0.95
+        },
+        {
+          "id": "oncall-distractor-network",
+          "day": 80,
+          "type": "semantic",
+          "entity": "Networking",
+          "key": "primary_oncall",
+          "value": "Tariq",
+          "content": "Tariq also carries the Networking secondary on-call rotation, which is unrelated to the Payments pager.",
+          "salience": 0.4
+        }
+      ],
+      "probes": [
+        {
+          "id": "current-payments-pager",
+          "query": "Who is on the Payments primary pager this week?",
+          "type": "semantic",
+          "expected": ["oncall-apr-current"],
+          "forbidden": ["oncall-jan", "oncall-feb", "oncall-mar", "oncall-distractor-network"],
+          "answerKeywords": ["Tariq", "Payments"],
+          "topK": 4
+        }
+      ]
+    }
+  ]
+}

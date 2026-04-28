@@ -1,0 +1,33 @@
+# dependencies (zero-dep, but reserve the path)
+node_modules/
+
+# transient adapter state (Audrey isolated benchmark stores etc.)
+.memorygym/
+
+# generated reports — keep reports/baselines/ (locked baselines, tracked)
+reports/*.json
+reports/*.html
+reports/*.ndjson
+reports/*.md
+reports/runs/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editor state
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS / platform droppings
+.DS_Store
+Thumbs.db
+NVIDIA Corporation/
+
+# secrets
+.env
+.env.local
+*.pem

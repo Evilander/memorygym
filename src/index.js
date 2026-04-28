@@ -1,0 +1,15 @@
+export { createAdapter, listAdapters } from './adapters/baselines.js';
+export { AudreyMcpAdapter } from './adapters/audrey-mcp.js';
+export { AudreyHttpAdapter } from './adapters/audrey-http.js';
+export { captureBaselines, checkBaselines } from './baseline.js';
+export { calibrateMatrix } from './calibrate.js';
+export { compareReports, loadReport } from './compare.js';
+export { inspectMemoryGym } from './doctor.js';
+export { lintScenarioPack } from './lint.js';
+export { buildScenarioManifest } from './manifest.js';
+export { runMatrix } from './matrix.js';
+export { renderReleaseNotes } from './release-notes.js';
+export { runReleaseGate } from './release.js';
+export { loadScenarioPack, runBenchmark } from './runner.js';
+export { scoreProbe } from './score.js';
+export { writeHtmlReport } from './report.js';
