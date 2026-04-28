@@ -1,18 +1,23 @@
 {
   "adapter": "typed-semantic",
   "version": "0.1.0",
-  "suite_fingerprint": "6c9d9c7733cb27b9c336213c09dcc4569689d04e5fbd3a7cb203b93046ec0b63",
+  "suite_fingerprint": "062f933e4fba719cafe353a6b0479760f88706f75a6d64a2399825d1ee6f9efa",
   "suites": [
+    {
+      "name": "Audrey Regression",
+      "version": "0.1.0",
+      "fingerprint": "0872a0b95769e4a28898a6d5cf6e9d8d46c315017d5f2422626ad1c2c0b40c63"
+    },
     {
       "name": "MemoryGym Core",
       "version": "0.1.0",
       "fingerprint": "d6406336594001d068323bf424ee006a4d810339d62bfe7636b6dff42b7a8213"
     }
   ],
-  "score": 0.7269410738845022,
+  "score": 0.754667744833733,
   "hitRate": 1,
-  "p95RecallLatencyMs": 0.8763999999999967,
-  "capturedAt": "2026-04-28T15:42:13.979Z",
+  "p95RecallLatencyMs": 0.37239999999999895,
+  "capturedAt": "2026-04-28T15:52:11.815Z",
   "runs": 5,
   "scoreStdDev": 0
 }
