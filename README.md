@@ -23,7 +23,7 @@ npx memorygym run --adapters hybrid --check
 
 ## Why this exists
 
-Agent memory is becoming a real product surface — mem0, Letta, Zep, MemGPT, Audrey, LangMem, Cognee — but most demos prove only that *something* is retrievable. They don't show what happens when:
+Agent memory is becoming a real product surface - mem0, Letta, Zep, MemGPT, Audrey, LangMem, Cognee - but most demos prove only that *something* is retrievable. They don't show what happens when:
 
 - the user contradicts themselves at session 12 and the system needs to converge on the corrected belief,
 - five entities share the same `key: deploy_window` and only context disambiguates,
@@ -73,15 +73,15 @@ The first project that adopted MemoryGym as a release gate was [Audrey](https://
 | `audrey-mcp` observe p95 | **2180ms** |
 | `audrey-mcp` recall p95 | 59.5ms |
 
-The headline 60ms recall looked fine. But the per-scenario observe p95 was 2.18 seconds, and a single probe (`negative-space-forgotten/isolated-data-policy`) accounted for the entire 2.3pp score gap — Audrey put a *status* memory above a *policy* memory because both shared "audrey live data" tokens. None of that would have been visible from a one-shot recall test.
+The headline 60ms recall looked fine. But the per-scenario observe p95 was 2.18 seconds, and a single probe (`negative-space-forgotten/isolated-data-policy`) accounted for the entire 2.3pp score gap - Audrey put a *status* memory above a *policy* memory because both shared "audrey live data" tokens. None of that would have been visible from a one-shot recall test.
 
 A profile-driven optimization pass ([Audrey v0.22.0](https://github.com/Evilander/Audrey/pull/18)) followed:
 
 | Metric | Before | After |
 | --- | ---: | ---: |
-| Cold-start first encode | 525ms | 28ms (18.7×) |
-| Encode response p50 | 24.7ms | 15.2ms (1.6×) |
-| Hybrid recall p50 | 30.2ms | 14.3ms (2.1×) |
+| Cold-start first encode | 525ms | 28ms (18.7x) |
+| Encode response p50 | 24.7ms | 15.2ms (1.6x) |
+| Hybrid recall p50 | 30.2ms | 14.3ms (2.1x) |
 | Embed calls per encode | 4 | 1 |
 | SQL roundtrips per recall | 4 | 2 |
 
@@ -91,14 +91,14 @@ The wins were concrete because each one was measurable inside MemoryGym's report
 
 | Metric | Description |
 | --- | --- |
-| `hitRate` | binary 1/0 — at least one expected event in top-K |
+| `hitRate` | binary 1/0 - at least one expected event in top-K |
 | `precision`, `recall` | classic IR over top-K |
 | `mrr` | reciprocal rank of the first match |
 | `ndcg` | gain at top-K / ideal gain at top-K |
 | `answerQuality` | fraction of `answerKeywords` whose tokens appear in any recalled content |
-| `contaminationPenalty` | `min(1, |forbidden ∩ returned| / |returned|)` |
+| `contaminationPenalty` | `min(1, |forbidden intersect returned| / |returned|)` |
 | `recallLatencyMs` | avg / p50 / p95 / max |
-| `score` | composite — see [`docs/scoring.md`](docs/scoring.md) |
+| `score` | composite - see [`docs/scoring.md`](docs/scoring.md) |
 
 The composite score weights `hitRate` and `contaminationPenalty` equally (`0.28` each). A high-confidence wrong answer costs as much as a correct one earns. Adapters that maximize hits at the expense of contamination cannot trade their way to a higher score.
 
@@ -116,7 +116,7 @@ The release gate runs the **core** and **audrey-regression** packs. The **extend
 | `contradiction-resolution.scenarios.json` | Reinforced beliefs overturned by board decisions and incident reviews | BeliefShift (arXiv 2603.23848) |
 | `noise-near-duplicates.scenarios.json` | Five high-overlap deploy windows and post-mortems; only one matches the asked context | scoring red-team |
 | `abstention.scenarios.json` | Unobserved teams, incidents, and policies; adapter must decline rather than fabricate | LongMemEval refusal probes |
-| `audrey-capabilities.scenarios.json` | Audrey-only native tool exercise — `memory_resolve_truth`, `memory_dream`, `memory_observe_tool`, `memory_preflight`, `memory_reflexes` | Audrey MCP surface |
+| `audrey-capabilities.scenarios.json` | Audrey-only native tool exercise - `memory_resolve_truth`, `memory_dream`, `memory_observe_tool`, `memory_preflight`, `memory_reflexes` | Audrey MCP surface |
 
 ## Probe kinds
 
@@ -155,7 +155,7 @@ Adapter must NOT surface a high-confidence answer for a question with no grounde
 
 ### `capability`
 
-Adapter must expose a specific native MCP tool and that tool must succeed when called. Used for vendor-specific probes (Audrey's `memory_dream`, `memory_resolve_truth`, etc.). Adapters that don't expose the required capability mark the probe **skipped** — skipped probes do not lower the aggregate score.
+Adapter must expose a specific native MCP tool and that tool must succeed when called. Used for vendor-specific probes (Audrey's `memory_dream`, `memory_resolve_truth`, etc.). Adapters that don't expose the required capability mark the probe **skipped** - skipped probes do not lower the aggregate score.
 
 ```json
 {
@@ -223,11 +223,11 @@ npx memorygym release \
 
 Combines into a single artifact:
 
-1. **Diagnostics** — Node version, cwd, Audrey config presence + paths.
-2. **Strict suite lint** — duplicate IDs, broken expected/forbidden references, thin event content, query-leaks-event-id, missing answerKeywords, missing forbidden sets on abstention probes.
-3. **Multi-suite matrix** — score / hitRate / latency for every adapter on every suite, plus aggregated min/mean.
-4. **Baseline check** — fingerprint-keyed regression detection vs. locked baselines under `reports/baselines/`. New adapters MUST capture a baseline before the gate passes; missing baselines fail loudly.
-5. **Markdown release notes** — auto-written at `reports/release-notes-<runId>.md`. Pass `--notes path.md` for a second copy at a stable path.
+1. **Diagnostics** - Node version, cwd, Audrey config presence + paths.
+2. **Strict suite lint** - duplicate IDs, broken expected/forbidden references, thin event content, query-leaks-event-id, missing answerKeywords, missing forbidden sets on abstention probes.
+3. **Multi-suite matrix** - score / hitRate / latency for every adapter on every suite, plus aggregated min/mean.
+4. **Baseline check** - fingerprint-keyed regression detection vs. locked baselines under `reports/baselines/`. New adapters MUST capture a baseline before the gate passes; missing baselines fail loudly.
+5. **Markdown release notes** - auto-written at `reports/release-notes-<runId>.md`. Pass `--notes path.md` for a second copy at a stable path.
 
 ## Baseline locks
 
@@ -239,7 +239,7 @@ npx memorygym baseline capture --adapters typed-semantic,hybrid --runs 5
 npx memorygym baseline check  --adapters typed-semantic,hybrid
 ```
 
-Baselines are stored as small aggregate-only JSON under `reports/baselines/<adapter>@<version>.json`, keyed on a SHA-256 fingerprint of the suite set. Changing a single character of any scenario file changes the fingerprint and forces a re-capture — a feature, not a bug.
+Baselines are stored as small aggregate-only JSON under `reports/baselines/<adapter>@<version>.json`, keyed on a SHA-256 fingerprint of the suite set. Changing a single character of any scenario file changes the fingerprint and forces a re-capture - a feature, not a bug.
 
 ## CLI reference
 
@@ -250,7 +250,7 @@ memorygym run [--suite path] [--adapters a,b,c] [--audrey] [--audrey-http] [--ch
 memorygym matrix --suites a,b --adapters x,y --check
 memorygym calibrate --suites a,b --adapters x,y --runs 3
 memorygym baseline capture --suites a,b --adapters x,y --runs 5
-memorygym baseline check  --suites a,b --adapters x,y
+memorygym baseline check  --adapters a,b
 memorygym release --suites a,b --adapters x,y [--notes notes.md]
 memorygym compare --baseline old.json --candidate new.json
 memorygym lint --suites a,b --strict
@@ -292,4 +292,4 @@ tests/run.js       # 22 in-process tests
 
 ## License
 
-[MIT](LICENSE) © Tyler Eveland
+[MIT](LICENSE)
